@@ -1,0 +1,8 @@
+node_modules/
+data/*.db
+data/*.db-*
+data/*.json
+data/session-secret.txt
+data/sessions/
+uploads/*
+!uploads/.gitkeep

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مذكّرة الحب القمرية</title>
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"></div>
+  <div class="petals" aria-hidden="true">
+    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+  </div>
+
+  <header class="site-header" aria-label="Private love diary navigation">
+    <a class="brand" href="#hero" aria-label="الرئيسية">
+      <span class="brand-mark">حب</span>
+      <span>مذكّرة الحب</span>
+    </a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="#login">الدخول</a>
+      <a href="#story">القصة</a>
+      <a href="#gallery">الذكريات</a>
+      <a href="#letters">الرسائل</a>
+      <a href="#dashboard" class="admin-only hidden">الإدارة</a>
+    </nav>
+    <div class="session-pill hidden" id="sessionPill">
+      <span id="currentUserName"></span>
+      <button id="logoutBtn" type="button">خروج</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="login" class="section login-section reveal">
+      <div class="section-kicker">دخول خاص</div>
+      <div class="login-card glass-card">
+        <div>
+          <p class="eyebrow">تسجيل دخول آمن</p>
+          <h1>ثلاثة قلوب فقط تملك المفتاح.</h1>
+          <p class="muted">الموقع أصبح تطبيقاً حقيقياً وخاصاً، بكلمات مرور مشفرة، جلسات آمنة، رفع دائم للصور، وبيانات محفوظة، مع حد أقصى ثلاثة حسابات فقط.</p>
+          <div class="role-pills" aria-label="Allowed account roles">
+            <span>المالك</span>
+            <span>المستخدم الأول</span>
+            <span>المستخدم الثاني</span>
+          </div>
+          <p class="muted" id="accountCapacity">جاري التحقق من عدد الحسابات...</p>
+        </div>
+        <form id="loginForm" class="login-form" aria-label="نموذج تسجيل الدخول">
+          <label>
+            الاسم
+            <input id="loginName" name="name" type="text" value="admin" autocomplete="username" required>
+          </label>
+          <label>
+            كلمة المرور
+            <input id="loginPassword" name="password" type="password" value="123456" autocomplete="current-password" minlength="6" maxlength="6" required>
+          </label>
+          <button type="submit">ادخل الحديقة</button>
+          <small id="loginMessage">حساب الأدمن الافتراضي: admin / 123456</small>
+        </form>
+      </div>
+    </section>
+
+    <div id="appContent" class="hidden">
+      <section id="hero" class="hero section reveal">
+        <div class="hero-frame">
+          <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false">الوضع الليلي</button>
+          <div class="floating-hearts" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+          <p class="eyebrow">حديقة ورد خاصة تحت ضوء القمر</p>
+          <h2 id="heroQuote">“في كل ثانية هادئة، تختارنا حكايتنا من جديد.”</h2>
+          <p class="hero-copy">صور، رسائل، موسيقى، أحلام، وثواني مضيئة منذ صار كل شيء لنا.</p>
+          <a href="#story" class="cta">قصتنا</a>
+        </div>
+      </section>
+
+      <section id="timer" class="section reveal">
+        <div class="section-heading">
+          <p class="section-kicker">عداد الحب</p>
+          <h2>الوقت منذ بدايتنا</h2>
+        </div>
+        <div class="timer-grid" aria-live="polite">
+          <article><strong id="years">0</strong><span>سنوات</span></article>
+          <article><strong id="months">0</strong><span>أشهر</span></article>
+          <article><strong id="days">0</strong><span>أيام</span></article>
+          <article><strong id="hours">0</strong><span>ساعات</span></article>
+          <article><strong id="minutes">0</strong><span>دقائق</span></article>
+          <article><strong id="seconds">0</strong><span>ثواني</span></article>
+        </div>
+      </section>
+
+      <section id="gallery" class="section reveal">
+        <div class="section-heading split">
+          <div>
+            <p class="section-kicker">معرض الذكريات</p>
+            <h2>لحظات داخل إطارات زجاجية</h2>
+          </div>
+        </div>
+        <form id="photoForm" class="admin-form admin-only hidden" enctype="multipart/form-data">
+          <input name="title" placeholder="عنوان الصورة" required>
+          <input name="caption" placeholder="الوصف">
+          <label class="check-row"><input name="isFavorite" type="checkbox"> ذكرى مفضلة</label>
+          <input name="photo" type="file" accept="image/*" required>
+          <button type="submit">رفع الصورة</button>
+        </form>
+        <div id="galleryGrid" class="gallery-grid empty-state"><p>ارفع أول ذكرى خاصة من لوحة الإدارة.</p></div>
+      </section>
+
+      <section id="story" class="section reveal">
+        <div class="section-heading">
+          <p class="section-kicker">خط قصة الحب</p>
+          <h2>فصول مضيئة</h2>
+        </div>
+        <form id="timelineForm" class="admin-form admin-only hidden">
+          <input name="title" placeholder="عنوان اللحظة" required>
+          <input name="eventDate" placeholder="التاريخ" required>
+          <input name="sortOrder" type="number" placeholder="الترتيب" value="0">
+          <textarea name="description" placeholder="الوصف" required></textarea>
+          <button type="submit">إضافة حدث</button>
+        </form>
+        <ol id="timelineList" class="timeline"></ol>
+      </section>
+
+      <section id="letters" class="section reveal letters-section">
+        <div class="section-heading split">
+          <div>
+            <p class="section-kicker">رسائل الحب</p>
+            <h2>افتحها عندما يضيء القمر</h2>
+          </div>
+        </div>
+        <form id="letterForm" class="admin-form admin-only hidden">
+          <input name="title" placeholder="عنوان الرسالة" required>
+          <textarea name="body" placeholder="نص الرسالة" required></textarea>
+          <button type="submit">إضافة رسالة</button>
+        </form>
+        <button id="envelope" class="envelope" type="button" aria-expanded="false">
+          <span class="flap"></span>
+          <span id="letterPreview" class="letter"><strong>جاري تحميل الرسالة...</strong></span>
+          <span class="seal">افتح</span>
+        </button>
+        <div id="lettersList" class="stack-list"></div>
+      </section>
+
+      <section class="section reveal feature-grid">
+        <article class="glass-card music-card">
+          <p class="section-kicker">الموسيقى</p>
+          <h2>أغنيتنا في الخلفية</h2>
+          <p id="musicStatus">لم يتم رفع أغنية بعد.</p>
+          <audio id="audioPlayer" class="hidden" preload="metadata"></audio>
+          <div class="player-bar"><span id="playerFill"></span></div>
+          <button id="playToggle" type="button">تشغيل الأغنية</button>
+          <form id="musicForm" class="admin-form compact admin-only hidden" enctype="multipart/form-data">
+            <input name="title" placeholder="عنوان الأغنية" required>
+            <input name="music" type="file" accept="audio/*" required>
+            <button type="submit">رفع الأغنية</button>
+          </form>
+        </article>
+        <article class="glass-card daily-card">
+          <p class="section-kicker">رسالة الحب اليومية</p>
+          <h2 id="dailyMessage">جاري تحميل رسالة اليوم...</h2>
+          <button id="surpriseBtn" type="button">فاجئني</button>
+          <p id="surpriseMessage" class="muted">اضغط الزر لتظهر رسالة خاصة.</p>
+        </article>
+        <article class="glass-card meter-card">
+          <p class="section-kicker">سحر إضافي</p>
+          <h2>نسبة الحب</h2>
+          <div class="love-meter" aria-label="Love percentage 97 percent"><span style="width:97%"></span></div>
+          <strong>97% ضوء قمر، و3% تنتظر الذكرى القادمة.</strong>
+          <p id="memoryOfDay" class="muted">ذكرى اليوم ستظهر بعد رفع الصور.</p>
+        </article>
+      </section>
+
+      <section class="section reveal">
+        <div class="section-heading">
+          <p class="section-kicker">لوحة الأحلام</p>
+          <h2>أحلام نبنيها معاً</h2>
+        </div>
+        <form id="goalForm" class="admin-form admin-only hidden">
+          <input name="title" placeholder="حلم مستقبلي" required>
+          <input name="progress" type="number" min="0" max="100" value="0" required>
+          <button type="submit">إضافة حلم</button>
+        </form>
+        <div id="goalsBoard" class="goals-board"></div>
+      </section>
+
+      <section class="section reveal guestbook-section">
+        <div class="section-heading">
+          <p class="section-kicker">دفتر الزوار الخاص</p>
+          <h2>ثلاثة أصوات فقط</h2>
+        </div>
+        <form id="guestbookForm" class="admin-form">
+          <textarea name="body" placeholder="اكتب رسالة خاصة..." required></textarea>
+          <button type="submit">نشر الرسالة</button>
+        </form>
+        <div id="guestbookList" class="guestbook"></div>
+      </section>
+
+      <section id="dashboard" class="section reveal dashboard-section admin-only hidden">
+        <div class="section-heading">
+          <p class="section-kicker">لوحة إدارة حقيقية</p>
+          <h2>لوحة الحارس</h2>
+        </div>
+        <div class="admin-console">
+          <article class="glass-card">
+            <h3>إدارة المستخدمين</h3>
+            <form id="userForm" class="admin-form compact">
+              <input name="name" placeholder="اسم المستخدم" required>
+              <input name="password" type="password" placeholder="كلمة مرور مؤقتة، 6 حروف فقط" minlength="6" maxlength="6" required>
+              <button type="submit">إنشاء مستخدم</button>
+            </form>
+            <div id="usersList" class="stack-list"></div>
+          </article>
+          <article class="glass-card">
+            <h3>إعدادات الصفحة</h3>
+            <form id="settingsForm" class="admin-form compact">
+              <label>تاريخ بداية العلاقة <input name="relationship_start_date" type="datetime-local" required></label>
+              <input name="hero_quote" placeholder="اقتباس الصفحة الرئيسية" required>
+              <input name="footer_quote" placeholder="اقتباس أسفل الصفحة" required>
+              <textarea name="daily_messages" placeholder="رسالة يومية واحدة في كل سطر"></textarea>
+              <button type="submit">حفظ الإعدادات</button>
+            </form>
+          </article>
+          <article class="glass-card">
+            <h3>الإحصائيات والنسخ الاحتياطي</h3>
+            <div id="analytics" class="analytics-grid"></div>
+            <a class="cta" href="/api/admin/backup" download>تحميل نسخة احتياطية</a>
+          </article>
+          <article class="glass-card">
+            <h3>كلمة المرور</h3>
+            <form id="passwordForm" class="admin-form compact">
+              <input name="currentPassword" type="password" placeholder="كلمة المرور الحالية" required>
+              <input name="newPassword" type="password" placeholder="كلمة مرور جديدة، 6 حروف فقط" minlength="6" maxlength="6" required>
+              <button type="submit">تغيير كلمة المرور</button>
+            </form>
+          </article>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p id="footerQuote">“الحب الذي نحفظه بيننا قادر أن يضيء سماء كاملة.”</p>
+    <small id="footerStartDate">تاريخ بداية العلاقة: 14 فبراير 2021 · © 2026 مذكّرة الحب</small>
+  </footer>
+
+  <dialog id="lightbox" class="lightbox" aria-labelledby="lightboxTitle">
+    <button id="closeLightbox" class="close-lightbox" type="button" aria-label="إغلاق المعاينة">×</button>
+    <img id="lightboxImage" class="lightbox-image" alt="ذكرى مختارة">
+    <h2 id="lightboxTitle"></h2>
+    <p id="lightboxCaption"></p>
+    <div id="commentsList" class="stack-list"></div>
+    <form id="commentForm" class="admin-form compact">
+      <textarea name="body" placeholder="اكتب تعليقاً..." required></textarea>
+      <button type="submit">نشر التعليق</button>
+    </form>
+  </dialog>
+
+  <script src="script.js"></script>
+</body>
+</html>

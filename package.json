@@ -1,0 +1,21 @@
+{
+  "name": "moonlit-love-diary",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check script.js"
+  },
+  "engines": {
+    "node": ">=20 <25"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.19.2",
+    "express-session": "^1.18.1",
+    "helmet": "^7.1.0",
+    "multer": "^2.0.2",
+    "session-file-store": "^1.5.0"
+  }
+}
