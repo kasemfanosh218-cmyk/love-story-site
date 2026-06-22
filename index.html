@@ -46,6 +46,7 @@
           </div>
           <p class="muted" id="accountCapacity">جاري التحقق من عدد الحسابات...</p>
         </div>
+        
         <form id="loginForm" class="login-form" aria-label="نموذج تسجيل الدخول">
           <label>
             الاسم
@@ -56,8 +57,11 @@
             <input id="loginPassword" name="password" type="password" value="123456" autocomplete="current-password" minlength="6" maxlength="6" required>
           </label>
           <button type="submit">ادخل الحديقة</button>
-          <small id="loginMessage">حساب الأدمن الافتراضي: admin / 123456</small>
         </form>
+        
+        <div style="text-align: center; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+          <small id="loginMessage" style="color: var(--muted); opacity: 0.8; font-size: 0.85rem;">حساب الأدمن الافتراضي: admin / 123456</small>
+        </div>
       </div>
     </section>
 
@@ -171,7 +175,7 @@
 
       <section class="section reveal">
         <div class="section-heading">
-          <p class="section-kicker">لوحة الأحلام</p>
+          <p class="section-kicker">لوحة الأحلاف</p>
           <h2>أحلام نبنيها معاً</h2>
         </div>
         <form id="goalForm" class="admin-form admin-only hidden">

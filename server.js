@@ -171,7 +171,7 @@ app.set('trust proxy', 1);
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
-  store: new FileStore({ path: path.join(DATA_DIR, 'sessions'), retries: 1 }),
+  store: new FileStore({ path: path.join(DATA_DIR, 'sessions'), retries: 1, logFn: () => {} }),
   secret: getSessionSecret(),
   resave: false,
   saveUninitialized: false,
@@ -378,7 +378,19 @@ app.get('/api/admin/backup', requireAuth, requireAdmin, (_req, res) => {
   res.json({ exportedAt: new Date().toISOString(), database: db });
 });
 
+// منع روابط الـ API غير الموجودة من إرجاع كود HTML
+app.all('/api/*', (req, res) => {
+  res.status(404).json({ error: 'هذا الإجراء غير مدعوم أو غير موجود على السيرفر.' });
+});
+
 app.get('*', (_req, res) => res.sendFile(path.join(ROOT, 'index.html')));
+
+// مصيدة الأخطاء العامة - تمنع كراش السيرفر وترجع رسائل خطأ نظيفة للـ Frontend
+app.use((err, req, res, next) => {
+  console.error('Server Error:', err);
+  const status = err.status || err.statusCode || 400;
+  res.status(status).json({ error: err.message || 'حدث خطأ غير متوقع في معالجة البيانات.' });
+});
 
 app.listen(PORT, () => {
   console.log(`Moonlit Love Diary running at http://localhost:${PORT}`);
