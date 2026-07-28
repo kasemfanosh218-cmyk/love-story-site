@@ -35,14 +35,21 @@ async function api(path, options = {}) {
 
   const response = await fetch(path, fetchOptions);
   const text = await response.text();
-  const data = text ? JSON.parse(text) : {};
+  let data = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (_error) {
+    data = { error: text || 'Request failed.' };
+  }
   if (!response.ok) throw new Error(data.error || 'Request failed.');
   return data;
 }
 
 function setMessage(element, message, isError = false) {
+  if (!element) return;
   element.textContent = message;
-  element.style.color = isError ? '#ffd1dc' : '';
+  element.classList.toggle('error', isError);
+  element.classList.toggle('success', Boolean(message) && !isError);
 }
 
 function escapeHtml(value) {
@@ -216,9 +223,10 @@ async function loadMusic() {
   const active = tracks.find((track) => track.isActive) || tracks[0];
   const audio = $('#audioPlayer');
   if (!active) {
-    $('#musicStatus').textContent = 'لم يتم رفع أغنية بعد.';
-    audio.classList.add('hidden');
-    return;
+    $('#musicStatus').textContent = 'لم يتم رفع أغنية بعد.';
+    audio.classList.add('hidden');
+    audio.removeAttribute('src');
+    return;
   }
   audio.src = active.url;
   audio.classList.remove('hidden');
@@ -323,15 +331,18 @@ async function submitFormData(event, path, after) {
   event.preventDefault();
   const form = event.target;
   const btn = form.querySelector('button[type="submit"]');
+  const message = form.querySelector('[data-form-message]');
   const originalText = btn.textContent;
   try {
     btn.disabled = true;
     btn.textContent = 'جاري الرفع والنبض...';
+    setMessage(message, 'جاري رفع الملف، انتظر قليلاً...');
     await api(path, { method: 'POST', body: new FormData(form) });
     form.reset();
     await after();
+    setMessage(message, path.includes('music') ? 'تم رفع الأغنية وتشغيلها في الموقع.' : 'تم رفع الصورة وإضافتها للمعرض.');
   } catch (error) {
-    alert(error.message);
+    setMessage(message, error.message, true);
   } finally {
     btn.disabled = false;
     btn.textContent = originalText;

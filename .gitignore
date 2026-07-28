@@ -6,3 +6,4 @@ data/session-secret.txt
 data/sessions/
 uploads/*
 !uploads/.gitkeep
+.env

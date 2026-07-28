@@ -38,7 +38,12 @@
         <div>
           <p class="eyebrow">تسجيل دخول آمن</p>
           <h1>ثلاثة قلوب فقط تملك المفتاح.</h1>
-          <p class="muted">الموقع أصبح تطبيقاً حقيقياً وخاصاً، بكلمات مرور مشفرة، جلسات آمنة، رفع دائم للصور، وبيانات محفوظة، مع حد أقصى ثلاثة حسابات فقط.</p>
+          <p class="muted">الموقع خاص بثلاثة حسابات فقط، مع كلمات مرور مشفرة، جلسات آمنة، وحفظ للصور والأغاني.</p>
+          <div class="default-login-card" aria-label="بيانات الدخول الافتراضية">
+            <span>الدخول الافتراضي</span>
+            <strong>الاسم: admin</strong>
+            <strong>الرمز: 123456</strong>
+          </div>
           <div class="role-pills" aria-label="Allowed account roles">
             <span>المالك</span>
             <span>المستخدم الأول</span>
@@ -59,9 +64,7 @@
           <button type="submit">ادخل الحديقة</button>
         </form>
         
-        <div style="text-align: center; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-          <small id="loginMessage" style="color: var(--muted); opacity: 0.8; font-size: 0.85rem;">حساب الأدمن الافتراضي: admin / 123456</small>
-        </div>
+        <p id="loginMessage" class="form-message">اكتب الاسم والرمز ثم اضغط دخول.</p>
       </div>
     </section>
 
@@ -105,6 +108,7 @@
           <label class="check-row"><input name="isFavorite" type="checkbox"> ذكرى مفضلة</label>
           <input name="photo" type="file" accept="image/*" required>
           <button type="submit">رفع الصورة</button>
+          <p class="form-message" data-form-message></p>
         </form>
         <div id="galleryGrid" class="gallery-grid empty-state"><p>ارفع أول ذكرى خاصة من لوحة الإدارة.</p></div>
       </section>
@@ -154,8 +158,9 @@
           <button id="playToggle" type="button">تشغيل الأغنية</button>
           <form id="musicForm" class="admin-form compact admin-only hidden" enctype="multipart/form-data">
             <input name="title" placeholder="عنوان الأغنية" required>
-            <input name="music" type="file" accept="audio/*" required>
+            <input name="music" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac" required>
             <button type="submit">رفع الأغنية</button>
+            <p class="form-message" data-form-message></p>
           </form>
         </article>
         <article class="glass-card daily-card">
