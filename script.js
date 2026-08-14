@@ -71,6 +71,7 @@ function applyAuthState(meta = {}) {
   $('#currentUserName').textContent = isLoggedIn ? `${currentUser.name} (${currentUser.role === 'admin' ? 'أدمن' : 'مستخدم'})` : '';
   $('#accountCapacity').innerHTML = `عدد الحسابات: <strong>${meta.userCount || 0} من ${meta.maxUsers || 3}</strong>`;
   $$('.admin-only').forEach((element) => element.classList.toggle('hidden', !currentUser || currentUser.role !== 'admin'));
+  $$('.upload-form').forEach((element) => element.classList.toggle('hidden', !isLoggedIn));
 }
 
 async function loadSession() {
@@ -207,7 +208,7 @@ async function loadLetters() {
 async function loadGuestbook() {
   const entries = await api('/api/guestbook');
   $('#guestbookList').innerHTML = entries.length ? entries.map((entry) => `
-    <article><strong>${escapeHtml(entry.author)}</strong><time>${formatDate(entry.createdAt)}</time><p>${escapeHtml(entry.body)}</p></article>
+    <article><strong>${escapeHtml(entry.author)}</strong><time>${formatDate(entry.createdAt)}</time><p>${escapeHtml(entry.body)}</p>${currentUser.role === 'admin' ? `<button class="danger-btn" data-delete-guestbook="${entry.id}" type="button">حذف</button>` : ''}</article>
   `).join('') : '<article><p>لا توجد رسائل في دفتر الزوار بعد.</p></article>';
 }
 
@@ -231,6 +232,19 @@ async function loadMusic() {
   audio.src = active.url;
   audio.classList.remove('hidden');
   $('#musicStatus').textContent = `جاهزة: ${active.title}`;
+}
+
+async function tryPlayMusic() {
+  const audio = $('#audioPlayer');
+  if (!audio.src) return;
+  try {
+    await audio.play();
+    $('.music-card').classList.add('playing');
+    $('#playToggle').textContent = 'إيقاف الأغنية';
+    $('#musicStatus').textContent = 'الأغنية تعمل تلقائياً بعد الدخول.';
+  } catch (_error) {
+    $('#musicStatus').textContent = 'الأغنية جاهزة. اضغط تشغيل إذا منع المتصفح التشغيل التلقائي.';
+  }
 }
 
 async function loadUsers() {
@@ -286,6 +300,7 @@ function bindForms() {
       currentUser = data.user;
       setMessage($('#loginMessage'), 'مرحباً بعودتك.');
       await loadSession();
+      await tryPlayMusic();
     } catch (error) {
       setMessage($('#loginMessage'), error.message, true);
     }
@@ -364,6 +379,7 @@ function bindDelegatedActions() {
     await handleDelete(event.target, 'deleteTimeline', '/api/timeline/', loadTimeline);
     await handleDelete(event.target, 'deleteLetter', '/api/letters/', loadLetters);
     await handleDelete(event.target, 'deleteGoal', '/api/goals/', loadGoals);
+    await handleDelete(event.target, 'deleteGuestbook', '/api/guestbook/', loadGuestbook);
     await handleDelete(event.target, 'deleteUser', '/api/users/', async () => { await loadUsers(); await loadSession(); });
     if (event.target.dataset?.editUser) await editUser(event.target.closest('.stack-item'));
   });

@@ -30,6 +30,7 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(PERSISTENT_DIR, 'uploads'
 const DB_PATH = path.join(DATA_DIR, 'database.json');
 const MAX_USERS = 3;
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const CLOUD_FETCH_TIMEOUT_MS = 8000;
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -39,7 +40,8 @@ if (process.env.CLOUDINARY_CLOUD_NAME) {
   cloudinary.config({ 
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
     api_key: process.env.CLOUDINARY_API_KEY, 
-    api_secret: process.env.CLOUDINARY_API_SECRET 
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+    timeout: 30000
   });
 }
 
@@ -98,7 +100,7 @@ async function loadDatabase() {
   try {
     // تعديل الرابط ليتجنب مشاكل الكاش والتخزين المؤقت أثناء الجلب
     const url = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/raw/upload/v1/moonlit_database.json?t=${Date.now()}`;
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: AbortSignal.timeout(CLOUD_FETCH_TIMEOUT_MS) });
     if (!response.ok) throw new Error("الملف غير موجود في السحاب");
     const data = await response.json();
     console.log("✅ تم تحميل قاعدة البيانات بنجاح من سحابة Cloudinary");
@@ -410,7 +412,7 @@ function serializePhoto(photo, userId) {
 
 app.get('/api/photos', requireAuth, (req, res) => res.json([...db.photos].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((photo) => serializePhoto(photo, req.user.id))));
 
-app.post('/api/photos', requireAuth, requireAdmin, photoUpload.single('photo'), async (req, res) => {
+app.post('/api/photos', requireAuth, photoUpload.single('photo'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'اختيار الصورة مطلوب.' });
     
@@ -532,6 +534,12 @@ app.post('/api/guestbook', requireAuth, async (req, res) => {
   } catch (error) { sendError(res, error); }
 });
 
+app.delete('/api/guestbook/:id', requireAuth, requireAdmin, async (req, res) => {
+  db.guestbook = db.guestbook.filter((entry) => entry.id !== Number(req.params.id));
+  await saveDatabase();
+  res.json({ ok: true });
+});
+
 app.get('/api/goals', requireAuth, (_req, res) => res.json(db.goals));
 
 app.post('/api/goals', requireAuth, requireAdmin, async (req, res) => {
@@ -547,7 +555,7 @@ app.delete('/api/goals/:id', requireAuth, requireAdmin, async (req, res) => { db
 
 app.get('/api/music', requireAuth, (_req, res) => res.json(db.music.map((track) => ({ ...track, url: track.url || `/uploads/${track.filename}` }))));
 
-app.post('/api/music', requireAuth, requireAdmin, musicUpload.single('music'), async (req, res) => {
+app.post('/api/music', requireAuth, musicUpload.single('music'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'اختيار الأغنية مطلوب.' });
     
