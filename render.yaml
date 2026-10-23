@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: moonlit-love-diary
+    env: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PERSISTENT_DIR
+        value: /var/data
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ADMIN_NAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        generateValue: true
+    disk:
+      name: moonlit-love-diary-data
+      mountPath: /var/data
+      sizeGB: 1
