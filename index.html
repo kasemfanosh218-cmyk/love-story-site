@@ -23,6 +23,7 @@
       <a href="#story">القصة</a>
       <a href="#gallery">الذكريات</a>
       <a href="#videos">الفيديوهات</a>
+      <a href="#recordings">التسجيلات الصوتية</a>
       <a href="#letters">الرسائل</a>
       <a href="#dashboard" class="admin-only hidden">الإدارة</a>
     </nav>
@@ -133,6 +134,19 @@
         <div id="videoGrid" class="video-grid empty-state"><p>لا توجد مقاطع فيديو بعد.</p></div>
       </section>
 
+      <section id="recordings" class="section reveal">
+        <div class="section-heading">
+          <p class="section-kicker">رسائل مسموعة</p>
+          <h2>تسجيلاتنا الصوتية</h2>
+        </div>
+        <form id="recordingForm" class="admin-form upload-form hidden" enctype="multipart/form-data">
+          <input name="title" placeholder="عنوان التسجيل" required>
+          <input name="recording" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac,.webm" required>
+          <button type="submit">رفع التسجيل</button>
+          <p class="form-message" data-form-message></p>
+        </form>
+        <div id="recordingList" class="recording-list empty-state"><p>لا توجد تسجيلات صوتية بعد.</p></div>
+      </section>
       <section id="story" class="section reveal">
         <div class="section-heading">
           <p class="section-kicker">خط قصة الحب</p>

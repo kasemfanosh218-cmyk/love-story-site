@@ -52,7 +52,7 @@ function getSessionSecret() {
 
 function defaultData() {
   return {
-    nextIds: { users: 1, photos: 1, comments: 1, timeline: 1, letters: 1, music: 1, videos: 1, guestbook: 1, goals: 1 },
+    nextIds: { users: 1, photos: 1, comments: 1, timeline: 1, letters: 1, music: 1, videos: 1, recordings: 1, guestbook: 1, goals: 1 },
     users: [],
     sessions: {}, // إضافة كائن لحفظ الجلسات سحابياً داخل قاعدة البيانات
     settings: {
@@ -80,6 +80,7 @@ function defaultData() {
     letters: [{ id: 1, title: 'My favorite chapter', body: 'Thank you for making ordinary days feel handwritten in gold.', createdAt: new Date().toISOString() }],
     music: [],
     videos: [],
+    recordings: [],
     guestbook: [],
     goals: [
       { id: 1, title: 'Save for the rose-garden trip', progress: 72 },
@@ -257,6 +258,7 @@ function sendError(res, error, status = 400) {
 const MAX_PHOTO_SIZE = 15 * 1024 * 1024;
 const MAX_MUSIC_SIZE = 100 * 1024 * 1024;
 const MAX_VIDEO_SIZE = 250 * 1024 * 1024;
+const MAX_RECORDING_SIZE = 100 * 1024 * 1024;
 
 // إعداد التخزين في الذاكرة للرفع المباشر مع حدود مناسبة للصور والأغاني.
 const photoUpload = multer({
@@ -308,6 +310,14 @@ function normalizeVideoLink(value) {
   return { url: url.href, embedUrl: '' };
 }
 
+const recordingUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_RECORDING_SIZE },
+  fileFilter: (_req, file, cb) => {
+    if (!file.mimetype.startsWith('audio/')) return cb(new Error('الملف المختار ليس تسجيلاً صوتياً مدعوماً.'));
+    cb(null, true);
+  }
+});
 function saveLocalUpload(file) {
   const ext = path.extname(file.originalname).toLowerCase() || '.bin';
   const filename = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}${ext}`;
@@ -500,6 +510,49 @@ app.delete('/api/videos/:id', requireAuth, requireAdmin, async (req, res) => {
   res.json({ ok: true });
 });
 
+app.get('/api/recordings', requireAuth, (_req, res) => res.json([...(db.recordings || [])].sort((a, b) => b.createdAt.localeCompare(a.createdAt))));
+
+app.post('/api/recordings', requireAuth, recordingUpload.single('recording'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'اختيار التسجيل الصوتي مطلوب.' });
+    let fileUrl = '';
+    let filename = null;
+    let cloudinaryPublicId = null;
+    if (process.env.CLOUDINARY_CLOUD_NAME) {
+      try {
+        const result = await uploadToCloudinary(req.file, { resource_type: 'video', folder: 'moonlit_uploads' });
+        fileUrl = result.secure_url;
+        cloudinaryPublicId = result.public_id;
+      } catch (error) {
+        console.error('Cloudinary recording upload failed, saving locally:', error.message || error);
+      }
+    }
+    if (!fileUrl) {
+      const local = saveLocalUpload(req.file);
+      fileUrl = local.url;
+      filename = local.filename;
+    }
+    if (!db.recordings) db.recordings = [];
+    const recording = { id: nextId('recordings'), title: assertText(req.body.title, 'Title', 160), url: fileUrl, filename, mimeType: req.file.mimetype, cloudinary_public_id: cloudinaryPublicId, uploadedBy: req.user.id, createdAt: new Date().toISOString() };
+    db.recordings.push(recording);
+    await saveDatabase();
+    res.status(201).json(recording);
+  } catch (error) { sendError(res, error); }
+});
+
+app.delete('/api/recordings/:id', requireAuth, requireAdmin, async (req, res) => {
+  const recording = (db.recordings || []).find((item) => item.id === Number(req.params.id));
+  if (!recording) return res.status(404).json({ error: 'Recording not found.' });
+  db.recordings = db.recordings.filter((item) => item.id !== recording.id);
+  if (recording.cloudinary_public_id && process.env.CLOUDINARY_CLOUD_NAME) {
+    try { await cloudinary.uploader.destroy(recording.cloudinary_public_id, { resource_type: 'video' }); }
+    catch (error) { console.error('Cloudinary recording deletion failed:', error); }
+  } else if (recording.filename) {
+    fs.rm(path.join(UPLOAD_DIR, recording.filename), { force: true }, () => {});
+  }
+  await saveDatabase();
+  res.json({ ok: true });
+});
 app.post('/api/photos', requireAuth, photoUpload.single('photo'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'اختيار الصورة مطلوب.' });
@@ -702,7 +755,7 @@ app.get('*', (_req, res) => res.sendFile(path.join(ROOT, 'index.html')));
 app.use((err, req, res, next) => {
   console.error('Server Error:', err);
   if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
-    const limitMb = Math.round(({ music: MAX_MUSIC_SIZE, video: MAX_VIDEO_SIZE, photo: MAX_PHOTO_SIZE })[err.field] / 1024 / 1024);
+    const limitMb = Math.round(({ music: MAX_MUSIC_SIZE, video: MAX_VIDEO_SIZE, recording: MAX_RECORDING_SIZE, photo: MAX_PHOTO_SIZE })[err.field] / 1024 / 1024);
     return res.status(413).json({ error: `حجم الملف كبير. الحد الأقصى ${limitMb}MB.` });
   }
   const status = err.status || err.statusCode || 400;

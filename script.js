@@ -86,6 +86,7 @@ async function loadAllData() {
     loadSettings(),
     loadPhotos(),
     loadVideos(),
+    loadRecordings(),
     loadTimeline(),
     loadLetters(),
     loadGuestbook(),
@@ -189,6 +190,23 @@ async function loadVideos() {
   `).join('');
 }
 
+async function loadRecordings() {
+  const recordings = await api('/api/recordings');
+  const list = $('#recordingList');
+  if (!recordings.length) {
+    list.className = 'recording-list empty-state';
+    list.innerHTML = '<p>لا توجد تسجيلات صوتية بعد.</p>';
+    return;
+  }
+  list.className = 'recording-list';
+  list.innerHTML = recordings.map((recording) => `
+    <article class="recording-card">
+      <div class="card-row"><h3>${escapeHtml(recording.title)}</h3><time>${formatDate(recording.createdAt)}</time></div>
+      <audio controls preload="metadata" src="${escapeHtml(recording.url)}"></audio>
+      ${currentUser.role === 'admin' ? `<div class="photo-actions"><button data-delete-recording="${recording.id}" type="button">حذف</button></div>` : ''}
+    </article>
+  `).join('');
+}
 async function openLightbox(photoId) {
   const photo = photos.find((item) => String(item.id) === String(photoId));
   if (!photo) return;
@@ -331,6 +349,7 @@ function bindForms() {
   $('#musicForm').addEventListener('submit', async (event) => submitFormData(event, '/api/music', loadMusic));
   $('#videoForm').addEventListener('submit', async (event) => submitFormData(event, '/api/videos', loadVideos));
   $('#videoUrlForm').addEventListener('submit', async (event) => submitJsonForm(event, '/api/videos/link', loadVideos));
+  $('#recordingForm').addEventListener('submit', async (event) => submitFormData(event, '/api/recordings', loadRecordings));
   $('#timelineForm').addEventListener('submit', async (event) => submitJsonForm(event, '/api/timeline', loadTimeline));
   $('#letterForm').addEventListener('submit', async (event) => submitJsonForm(event, '/api/letters', loadLetters));
   $('#guestbookForm').addEventListener('submit', async (event) => submitJsonForm(event, '/api/guestbook', loadGuestbook));
@@ -400,6 +419,7 @@ function bindDelegatedActions() {
     }
       await handleDelete(event.target, 'deletePhoto', '/api/photos/', loadPhotos);
       await handleDelete(event.target, 'deleteVideo', '/api/videos/', loadVideos);
+      await handleDelete(event.target, 'deleteRecording', '/api/recordings/', loadRecordings);
     await handleDelete(event.target, 'deleteTimeline', '/api/timeline/', loadTimeline);
     await handleDelete(event.target, 'deleteLetter', '/api/letters/', loadLetters);
     await handleDelete(event.target, 'deleteGoal', '/api/goals/', loadGoals);
