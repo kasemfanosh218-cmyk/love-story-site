@@ -141,8 +141,19 @@
         </div>
         <form id="recordingForm" class="admin-form upload-form hidden" enctype="multipart/form-data">
           <input name="title" placeholder="عنوان التسجيل" required>
-          <input name="recording" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac,.webm" required>
-          <button type="submit">رفع التسجيل</button>
+          <div class="recording-controls">
+            <button id="startRecordingBtn" class="record-button" type="button">● ابدأ التسجيل</button>
+            <button id="stopRecordingBtn" class="record-button stop hidden" type="button">■ إيقاف التسجيل</button>
+            <span id="recordingTimer" class="recording-timer" aria-live="polite">00:00</span>
+          </div>
+          <p class="muted recording-hint">أو اختر تسجيلاً صوتياً جاهزاً من جهازك:</p>
+          <input id="recordingFile" name="recording" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac,.webm">
+          <div id="recordingPreviewWrap" class="recording-preview hidden">
+            <span id="recordingPreviewLabel">معاينة قبل الإرسال</span>
+            <audio id="recordingPreview" controls preload="metadata"></audio>
+            <button id="discardRecordingBtn" class="ghost-btn" type="button">إلغاء المعاينة</button>
+          </div>
+          <button id="sendRecordingBtn" type="submit" disabled>إرسال التسجيل</button>
           <p class="form-message" data-form-message></p>
         </form>
         <div id="recordingList" class="recording-list empty-state"><p>لا توجد تسجيلات صوتية بعد.</p></div>

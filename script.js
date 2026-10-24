@@ -3,6 +3,13 @@ let settings = null;
 let relationshipStartDate = new Date('2021-02-14T20:30:00');
 let photos = [];
 let activePhotoId = null;
+let recorder = null;
+let recorderStream = null;
+let recorderChunks = [];
+let selectedRecording = null;
+let recordingPreviewUrl = null;
+let recordingStartedAt = 0;
+let recordingTimerInterval = null;
 
 const surpriseMessages = [
   'قبلة سرية مخبأة في الأغنية القادمة.',
@@ -349,7 +356,7 @@ function bindForms() {
   $('#musicForm').addEventListener('submit', async (event) => submitFormData(event, '/api/music', loadMusic));
   $('#videoForm').addEventListener('submit', async (event) => submitFormData(event, '/api/videos', loadVideos));
   $('#videoUrlForm').addEventListener('submit', async (event) => submitJsonForm(event, '/api/videos/link', loadVideos));
-  $('#recordingForm').addEventListener('submit', async (event) => submitFormData(event, '/api/recordings', loadRecordings));
+  bindRecordingControls();
   $('#timelineForm').addEventListener('submit', async (event) => submitJsonForm(event, '/api/timeline', loadTimeline));
   $('#letterForm').addEventListener('submit', async (event) => submitJsonForm(event, '/api/letters', loadLetters));
   $('#guestbookForm').addEventListener('submit', async (event) => submitJsonForm(event, '/api/guestbook', loadGuestbook));
@@ -404,6 +411,124 @@ async function submitFormData(event, path, after) {
     btn.disabled = false;
     btn.textContent = originalText;
   }
+}
+
+function setRecordingPreview(file, label) {
+  if (recordingPreviewUrl) URL.revokeObjectURL(recordingPreviewUrl);
+  selectedRecording = file;
+  recordingPreviewUrl = file ? URL.createObjectURL(file) : null;
+  $('#recordingPreview').pause();
+  if (recordingPreviewUrl) {
+    $('#recordingPreview').src = recordingPreviewUrl;
+    $('#recordingPreviewWrap').classList.remove('hidden');
+    $('#recordingPreviewLabel').textContent = label;
+    $('#sendRecordingBtn').disabled = false;
+  } else {
+    $('#recordingPreview').removeAttribute('src');
+    $('#recordingPreview').load();
+    $('#recordingPreviewWrap').classList.add('hidden');
+    $('#sendRecordingBtn').disabled = true;
+  }
+}
+
+function stopRecordingTracks() {
+  if (recorderStream) recorderStream.getTracks().forEach((track) => track.stop());
+  recorderStream = null;
+  recorder = null;
+  clearInterval(recordingTimerInterval);
+  recordingTimerInterval = null;
+  $('#startRecordingBtn').classList.remove('hidden');
+  $('#stopRecordingBtn').classList.add('hidden');
+}
+
+function bindRecordingControls() {
+  const form = $('#recordingForm');
+  const fileInput = $('#recordingFile');
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (file) setRecordingPreview(file, 'معاينة الملف المحدد');
+  });
+
+  $('#startRecordingBtn').addEventListener('click', async () => {
+    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+      setMessage(form.querySelector('[data-form-message]'), 'التسجيل المباشر غير مدعوم في هذا المتصفح. اختر ملفاً صوتياً بدلاً من ذلك.', true);
+      return;
+    }
+    try {
+      setRecordingPreview(null);
+      fileInput.value = '';
+      recorderStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const preferredType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'].find((type) => MediaRecorder.isTypeSupported(type));
+      recorder = preferredType ? new MediaRecorder(recorderStream, { mimeType: preferredType }) : new MediaRecorder(recorderStream);
+      recorderChunks = [];
+      recorder.ondataavailable = (event) => { if (event.data.size) recorderChunks.push(event.data); };
+      recorder.onstop = () => {
+        const mimeType = recorder.mimeType || 'audio/webm';
+        const blob = new Blob(recorderChunks, { type: mimeType });
+        if (blob.size) {
+          const extension = mimeType.includes('mp4') ? 'm4a' : mimeType.includes('ogg') ? 'ogg' : 'webm';
+          setRecordingPreview(new File([blob], `voice-recording.${extension}`, { type: mimeType }), 'معاينة التسجيل');
+          setMessage(form.querySelector('[data-form-message]'), 'استمع للتسجيل، ثم أرسله أو ألغِ المعاينة.');
+        } else {
+          setMessage(form.querySelector('[data-form-message]'), 'لم يتم التقاط صوت. حاول التسجيل مرة أخرى.', true);
+        }
+        stopRecordingTracks();
+      };
+      recorder.start();
+      recordingStartedAt = Date.now();
+      $('#startRecordingBtn').classList.add('hidden');
+      $('#stopRecordingBtn').classList.remove('hidden');
+      $('#recordingTimer').textContent = '00:00';
+      recordingTimerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - recordingStartedAt) / 1000);
+        $('#recordingTimer').textContent = `${String(Math.floor(elapsed / 60)).padStart(2, '0')}:${String(elapsed % 60).padStart(2, '0')}`;
+      }, 250);
+      setMessage(form.querySelector('[data-form-message]'), 'التسجيل جارٍ... اضغط إيقاف عند الانتهاء.');
+    } catch (error) {
+      stopRecordingTracks();
+      const message = error.name === 'NotAllowedError' ? 'يرجى السماح باستخدام الميكروفون من إعدادات المتصفح.' : 'تعذر بدء التسجيل. تأكد من اتصال HTTPS وتوفر الميكروفون.';
+      setMessage(form.querySelector('[data-form-message]'), message, true);
+    }
+  });
+
+  $('#stopRecordingBtn').addEventListener('click', () => {
+    if (recorder?.state === 'recording') recorder.stop();
+  });
+
+  $('#discardRecordingBtn').addEventListener('click', () => {
+    setRecordingPreview(null);
+    fileInput.value = '';
+    $('#recordingTimer').textContent = '00:00';
+    setMessage(form.querySelector('[data-form-message]'), 'تم إلغاء المعاينة. يمكنك التسجيل أو اختيار ملف آخر.');
+  });
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!selectedRecording) {
+      setMessage(form.querySelector('[data-form-message]'), 'سجّل صوتاً أو اختر ملفاً ثم عاينه قبل الإرسال.', true);
+      return;
+    }
+    const button = $('#sendRecordingBtn');
+    const message = form.querySelector('[data-form-message]');
+    button.disabled = true;
+    button.textContent = 'جاري إرسال التسجيل...';
+    try {
+      const body = new FormData();
+      body.set('title', form.elements.title.value);
+      body.set('recording', selectedRecording, selectedRecording.name);
+      await api('/api/recordings', { method: 'POST', body });
+      form.reset();
+      setRecordingPreview(null);
+      $('#recordingTimer').textContent = '00:00';
+      await loadRecordings();
+      setMessage(message, 'تم إرسال التسجيل الصوتي بنجاح.');
+    } catch (error) {
+      setMessage(message, error.message, true);
+    } finally {
+      button.textContent = 'إرسال التسجيل';
+      button.disabled = !selectedRecording;
+    }
+  });
 }
 
 function bindDelegatedActions() {

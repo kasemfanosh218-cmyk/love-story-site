@@ -273,6 +273,15 @@ body.day-mode .site-header { background: rgba(255,255,255,0.48); }
 .recording-card h3 { margin: 0; font-family: var(--serif); font-size: 1.5rem; }
 .recording-card time { color: var(--muted); font-size: 0.9rem; }
 .recording-card audio { display: block; width: 100%; margin: 12px 0 4px; }
+.recording-controls { display: flex; align-items: center; gap: 12px; }
+.recording-controls .record-button { border: 1px solid var(--stroke); border-radius: 999px; padding: 12px 18px; color: var(--ink); background: rgba(255,255,255,0.12); cursor: pointer; }
+.recording-controls .record-button:not(.stop) { color: #fff; background: #c93462; }
+.recording-controls .record-button.stop { color: #32152f; background: var(--gold); }
+.recording-timer { min-width: 3.5rem; color: var(--gold); font-variant-numeric: tabular-nums; font-weight: 800; }
+.recording-hint { margin: 0; }
+.recording-preview { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--stroke); border-radius: 18px; background: rgba(255,255,255,0.08); }
+.recording-preview audio { width: 100%; }
+.recording-preview .ghost-btn { width: fit-content; border: 1px solid var(--stroke); border-radius: 14px; padding: 9px 12px; color: var(--ink); background: rgba(255,255,255,0.10); cursor: pointer; }
 .memory-card { padding: 12px; border-radius: 34px; transition: transform 250ms ease, box-shadow 250ms ease; }
 .memory-card:hover { transform: translateY(-8px) rotate(-1deg); }
 .photo {
